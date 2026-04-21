@@ -1,0 +1,41 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: Interview
+  # PostgreSQL数据库配置
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:interview_guide}
+    username: ${POSTGRES_USER:liull19}
+    # 与根目录 docker-compose.yml 中 postgres 服务默认一致（本地只起依赖容器 + bootRun 时无需改）
+    password: ${POSTGRES_PASSWORD:123456}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update #首次启动用 create，表创建成功后，改回 update. 自动建表
+    show-sql: true #打印SQL
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  ai:
+    openai:
+      api-key: sk-ec8f3fcc3c5e4f60b72bcf253403db57
+      base-url: https://dashscope.aliyuncs.com
+
+app:
+  #文件服务器存储 类似于阿里云oss这种
+  storage:
+    endpoint: ${APP_STORAGE_ENDPOINT:http://localhost:9000} #文件服务器存储地址
+    access-key: ${APP_STORAGE_ACCESS_KEY:minioadmin} # 登陆用户名
+    secret-key: ${APP_STORAGE_SECRET_KEY:minioadmin} #登陆密码
+    bucket: ${APP_STORAGE_BUCKET:interview} #存储空间名字
+    region: ${APP_STORAGE_REGION:us-east-1} #区域
+  resume:
+    upload-dir: ${java.io.tmpdir}/ai-interview/resumes
+    allowed-types:
+      - application/pdf
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      - text/plain
