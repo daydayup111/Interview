@@ -154,5 +154,52 @@ public class ResumePersistenceService {
     public List<ResumeAnalysisEntity> findAnalysesByResumeId(Long resumeId) {
         return analysisRepository.findByResumeIdOrderByAnalyzedAtDesc(resumeId);
     }
+
+    /**
+     * 删除简历及其所有关联数据
+     * 包括：简历分析记录、面试会话（会自动删除面试答案）
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteResume(Long id) {
+        Optional<ResumeEntity> resumeOpt = resumeRepository.findById(id);
+        if (resumeOpt.isEmpty()){
+            throw new BusinessException(ErrorCode.RESUME_NOT_FOUND);
+        }
+        ResumeEntity resume = resumeOpt.get();
+        // 1. 删除所有简历分析记录
+        List<ResumeAnalysisEntity> analyses = analysisRepository.findByResumeIdOrderByAnalyzedAtDesc(id);
+        if (analyses.isEmpty()){
+            analysisRepository.deleteAll(analyses);
+            log.info("已删除 {} 条简历分析记录", analyses.size());
+        }
+        // 2. 删除简历实体（面试会话会在服务层删除）
+        resumeRepository.delete(resume);
+        log.info("简历已删除: id={}, filename={}", id, resume.getOriginalFilename());
+    }
+
+    /**
+     * 保存简历评测结果
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public ResumeAnalysisEntity saveAnalysis(ResumeEntity resume, ResumeAnalysisResponse analysis) {
+        try {
+            // 使用 MapStruct 映射基础字段
+            ResumeAnalysisEntity entity = resumeMapper.toAnalysisEntity(analysis);
+            entity.setResume(resume);
+
+            // JSON 字段需要手动序列化
+            entity.setStrengthsJson(objectMapper.writeValueAsString(analysis.strengths()));
+            entity.setSuggestionsJson(objectMapper.writeValueAsString(analysis.suggestions()));
+
+            ResumeAnalysisEntity saved = analysisRepository.save(entity);
+            log.info("简历评测结果已保存: analysisId={}, resumeId={}, score={}",
+                    saved.getId(), resume.getId(), analysis.overallScore());
+
+            return saved;
+        } catch (JacksonException e) {
+            log.error("序列化评测结果失败: {}", e.getMessage(), e);
+            throw new BusinessException(ErrorCode.RESUME_ANALYSIS_FAILED, "保存评测结果失败");
+        }
+    }
 }
 

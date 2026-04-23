@@ -54,7 +54,21 @@ public interface ResumeMapper {
                 .map(e -> toAnalysisHistoryDTO(e, strengthsExtractor.apply(e), suggestionsExtractor.apply(e)))
                 .toList();
     }
-
+    /**
+     * 从 ResumeAnalysisResponse 创建 ResumeAnalysisEntity
+     * 注意：JSON 字段和 Resume 关联需要在 Service 层设置
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "resume", ignore = true)
+    @Mapping(target = "strengthsJson", ignore = true)
+    @Mapping(target = "suggestionsJson", ignore = true)
+    @Mapping(target = "analyzedAt", ignore = true)
+    @Mapping(target = "contentScore", source = "scoreDetail.contentScore")
+    @Mapping(target = "structureScore", source = "scoreDetail.structureScore")
+    @Mapping(target = "skillMatchScore", source = "scoreDetail.skillMatchScore")
+    @Mapping(target = "expressionScore", source = "scoreDetail.expressionScore")
+    @Mapping(target = "projectScore", source = "scoreDetail.projectScore")
+    ResumeAnalysisEntity toAnalysisEntity(ResumeAnalysisResponse response);
 
     @Named("nullToZero")
     default int nullToZero(Integer value) {

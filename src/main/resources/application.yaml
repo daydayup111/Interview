@@ -22,7 +22,22 @@ spring:
   ai:
     openai:
       api-key: sk-ec8f3fcc3c5e4f60b72bcf253403db57
-      base-url: https://dashscope.aliyuncs.com
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      chat:
+        options:
+          model: qwen-max
+
+  # Redisson配置 (使用 spring.redis.redisson，参考官方文档)
+  redis:
+    redisson:
+      config: |
+        singleServerConfig:
+          address: "redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}"
+          database: 0
+          connectionMinimumIdleSize: 10
+          connectionPoolSize: 64
+          subscriptionConnectionMinimumIdleSize: 1
+          subscriptionConnectionPoolSize: 50
 
 app:
   #文件服务器存储 类似于阿里云oss这种
@@ -39,3 +54,52 @@ app:
       - application/msword
       - application/vnd.openxmlformats-officedocument.wordprocessingml.document
       - text/plain
+  ai:
+    default-provider: dashscope
+    agent-utils:
+      skills-root: ${APP_AI_AGENT_UTILS_SKILLS_ROOT:classpath:skills}
+    providers:
+      dashscope:
+        base-url: https://dashscope.aliyuncs.com/compatible-mode
+        api-key: ${AI_BAILIAN_API_KEY:sk-ec8f3fcc3c5e4f60b72bcf253403db57}
+        model: qwen-plus
+      lmstudio:
+        base-url: http://localhost:1234
+        api-key: lm-studio
+        model: qwen2.5-7b-instruct
+    advisors:
+      enabled: ${APP_AI_ADVISORS_ENABLED:true}
+      tool-call-enabled: ${APP_AI_ADVISORS_TOOL_CALL_ENABLED:true}
+      tool-call-conversation-history-enabled: ${APP_AI_ADVISORS_TOOL_CALL_CONVERSATION_HISTORY_ENABLED:false}
+      stream-tool-call-responses: ${APP_AI_ADVISORS_STREAM_TOOL_CALL_RESPONSES:false}
+      message-chat-memory-enabled: ${APP_AI_ADVISORS_MESSAGE_CHAT_MEMORY_ENABLED:false}
+      message-chat-memory-max-messages: ${APP_AI_ADVISORS_MESSAGE_CHAT_MEMORY_MAX_MESSAGES:120}
+      simple-logger-enabled: ${APP_AI_ADVISORS_SIMPLE_LOGGER_ENABLED:false}
+    # 结构化输出重试次数（用于 BeanOutputConverter 解析失败时的业务层重试）
+    structured-max-attempts: ${APP_AI_STRUCTURED_MAX_ATTEMPTS:2}
+    # 重试时是否将上次错误原因注入提示词，帮助模型定向修复输出
+    structured-include-last-error: ${APP_AI_STRUCTURED_INCLUDE_LAST_ERROR:true}
+    # 是否启用“修复型重试提示词”（关闭后每次重试沿用原始 system prompt）
+    structured-retry-use-repair-prompt: ${APP_AI_STRUCTURED_RETRY_USE_REPAIR_PROMPT:true}
+    # 修复型重试提示词中是否追加严格 JSON 指令
+    structured-retry-append-strict-json-instruction: ${APP_AI_STRUCTURED_RETRY_APPEND_STRICT_JSON_INSTRUCTION:true}
+    # 注入到重试提示词中的错误信息最大长度
+    structured-error-message-max-length: ${APP_AI_STRUCTURED_ERROR_MESSAGE_MAX_LENGTH:200}
+    # 是否开启结构化输出调用指标（invocations/attempts/latency）
+    structured-metrics-enabled: ${APP_AI_STRUCTURED_METRICS_ENABLED:true}
+    rag:
+      rewrite:
+        enabled: ${APP_AI_RAG_REWRITE_ENABLED:true}
+      search:
+        short-query-length: ${APP_AI_RAG_SHORT_QUERY_LENGTH:4}
+        topk-short: ${APP_AI_RAG_TOPK_SHORT:20}
+        topk-medium: ${APP_AI_RAG_TOPK_MEDIUM:12}
+        topk-long: ${APP_AI_RAG_TOPK_LONG:8}
+        min-score-short: ${APP_AI_RAG_MIN_SCORE_SHORT:0.18}
+        min-score-default: ${APP_AI_RAG_MIN_SCORE_DEFAULT:0.28}
+
+logging:
+  level:
+    org.springframework.ai.openai: DEBUG
+    org.springframework.web.client.RestTemplate: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG

@@ -4,6 +4,7 @@ import com.liull19.interview.config.AppConfigProperties;
 import com.liull19.interview.constant.AsyncTaskStatus;
 import com.liull19.interview.constant.ErrorCode;
 import com.liull19.interview.exception.BusinessException;
+import com.liull19.interview.listen.resume.AnalyzeStreamProducer;
 import com.liull19.interview.model.resume.dto.ResumeAnalysisResponse;
 import com.liull19.interview.model.resume.entity.ResumeEntity;
 import com.liull19.interview.service.impl.Resume.ResumeParseService;
@@ -31,7 +32,7 @@ public class ResumeUploadService {
     private final AppConfigProperties appConfig;
     private final ResumePersistenceService persistenceService;
     private final FileStorageService storageService;
-    //private final AnalyzeStreamProducer analyzeStreamProducer;
+    private final AnalyzeStreamProducer analyzeStreamProducer;
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -81,7 +82,7 @@ public class ResumeUploadService {
         ResumeEntity savedResume = persistenceService.saveResume(file, resumeText, fileKey, fileUrl);
 
         // 7. 发送分析任务到 Redis Stream（异步处理）
-      //  analyzeStreamProducer.sendAnalyzeTask(savedResume.getId(), resumeText);
+        analyzeStreamProducer.sendAnalyzeTask(savedResume.getId(), resumeText);
 
         long totalTime = System.currentTimeMillis() - startTime;
         log.info("简历上传处理完成: {}, resumeId={} - 总耗时: {}ms (解析+存储+入库)",

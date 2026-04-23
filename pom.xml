@@ -157,6 +157,7 @@
 		</dependency>
 
 		<!-- Aliyun DashScope -->
+		<!-- Aliyun DashScope -->
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>dashscope-sdk-java</artifactId>
@@ -165,6 +166,10 @@
 				<exclusion>
 					<groupId>org.slf4j</groupId>
 					<artifactId>slf4j-simple</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.github.victools</groupId>
+					<artifactId>jsonschema-generator</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>

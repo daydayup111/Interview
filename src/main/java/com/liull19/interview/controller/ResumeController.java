@@ -3,6 +3,7 @@ package com.liull19.interview.controller;
 import com.liull19.interview.aop.RateLimit;
 import com.liull19.interview.model.resume.dto.ResumeDetailDTO;
 import com.liull19.interview.model.resume.dto.ResumeListItemDTO;
+import com.liull19.interview.service.Resume.ResumeDeleteService;
 import com.liull19.interview.service.Resume.ResumeHistoryService;
 import com.liull19.interview.service.Resume.ResumeUploadService;
 import com.liull19.interview.utils.Result;
@@ -24,7 +25,7 @@ public class ResumeController {
 
     private final ResumeHistoryService historyService;
     private final ResumeUploadService uploadService;
-
+    private final ResumeDeleteService deleteService;
 
     /**
      * 获取所有简历列表
@@ -55,6 +56,27 @@ public class ResumeController {
 
 
     /**
+     * 获取简历详情（包含分析历史）
+     */
+    @GetMapping("/api/resumes/{id}/detail")
+    public Result<ResumeDetailDTO> getResumeDetail(@PathVariable Long id) {
+        ResumeDetailDTO detail = historyService.getResumeDetail(id);
+        return Result.success(detail);
+    }
+
+    /**
+     * 删除简历
+     *
+     * @param id 简历ID
+     * @return 删除结果
+     */
+    @DeleteMapping("/api/resumes/{id}")
+    public Result<Void> deleteResume(@PathVariable Long id) {
+        deleteService.deleteResume(id);
+        return Result.success(null);
+    }
+
+    /**
      * 健康检查接口
      */
     @GetMapping("/api/resumes/health")
@@ -65,12 +87,4 @@ public class ResumeController {
         ));
     }
 
-    /**
-     * 获取简历详情（包含分析历史）
-     */
-    @GetMapping("/api/resumes/{id}/detail")
-    public Result<ResumeDetailDTO> getResumeDetail(@PathVariable Long id) {
-        ResumeDetailDTO detail = historyService.getResumeDetail(id);
-        return Result.success(detail);
-    }
 }
